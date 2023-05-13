@@ -1112,7 +1112,7 @@ QMessageBox::warning(this, tr("Backup Failed"), tr("There was an error trying to
         }
     }
 }
-
+/**
 void BitcoinGUI::dumpWallet()
 {
    if(!walletModel)
@@ -1179,6 +1179,7 @@ void BitcoinGUI::importWallet()
                       ,CClientUIInterface::MSG_INFORMATION);
     }
 }
+*/
 void BitcoinGUI::changePassphrase()
 {
     AskPassphraseDialog dlg(AskPassphraseDialog::ChangePass, this);

@@ -208,8 +208,8 @@ private slots:
     /** Repair the wallet */ 
     void repairWallet(); 
     /** Import/Export the wallet's keys */
-    void dumpWallet();
-    void importWallet();
+//    void dumpWallet();
+//    void importWallet();
     /** Backup the wallet */
     void backupWallet();
     /** Change encrypted wallet passphrase */

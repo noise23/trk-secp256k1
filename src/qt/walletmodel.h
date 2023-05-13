@@ -100,8 +100,8 @@ public:
     void checkWallet(int& nMismatchSpent, int64_t& nBalanceInQuestion, int& nOrphansFound); 
     void repairWallet(int& nMismatchSpent, int64_t& nBalanceInQuestion, int& nOrphansFound); 
     // Wallet Import/Export
-    bool dumpWallet(const QString &filename);
-    bool importWallet(const QString &filename);
+//    bool dumpWallet(const QString &filename);
+//    bool importWallet(const QString &filename);
     // Stake Weight for coin control dialog 
     void getStakeWeightFromValue(const int64_t& nTime, const int64_t& nValue, uint64_t& nWeight);
 

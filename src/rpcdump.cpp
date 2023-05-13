@@ -70,7 +70,7 @@ Value importprivkey(const Array& params, bool fHelp)
 
     return Value::null;
 }
-
+/**
 Value importwallet(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
@@ -89,7 +89,7 @@ Value importwallet(const Array& params, bool fHelp)
 
     return Value::null;
 }
-
+*/
 Value dumpprivkey(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
@@ -111,7 +111,7 @@ Value dumpprivkey(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
     return CBitcoinSecret(vchSecret).ToString();
 }
-
+/**
 Value dumpwallet(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
@@ -130,3 +130,4 @@ Value dumpwallet(const Array& params, bool fHelp)
 
    return Value::null;
 }
+*/

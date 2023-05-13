@@ -717,7 +717,7 @@ bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename, bool fOnlyKeys)
 
     return fSuccess;
 }
-
+/**
 bool DumpWallet(CWallet* pwallet, const string& strDest)
 {
 
@@ -879,6 +879,7 @@ bool ImportWallet(CWallet *pwallet, const string& strLocation)
   return false;
 
 }
+*/
 bool CWalletDB::Recover(CDBEnv& dbenv, std::string filename)
 {
     return CWalletDB::Recover(dbenv, filename, false);
