@@ -7,6 +7,7 @@
 #define BITCOIN_UINT256_H
 
 #include <assert.h>
+#include <stdexcept>
 #include <stdint.h>
 #include <stdio.h>
 #include <string>
@@ -19,6 +20,11 @@ inline signed char HexDigit(char c)
 {
     return p_util_hexdigit[(unsigned char)c];
 }
+
+class uint_error : public std::runtime_error {
+public:
+    explicit uint_error(const std::string& str) : std::runtime_error(str) {}
+};
 
 /** Base class without constructors for uint256 and uint160.
  * This makes the compiler let u use it in a union.
@@ -464,10 +470,9 @@ public:
 
     explicit uint160(const std::vector<unsigned char>& vch)
     {
-        if (vch.size() == sizeof(pn))
-            memcpy(pn, &vch[0], sizeof(pn));
-        else
-            *this = 0;
+        if (vch.size() != sizeof(pn))
+            throw uint_error("Converting vector of wrong size to base_uint");
+        memcpy(pn, &vch[0], sizeof(pn));
     }
 };
 
@@ -574,10 +579,9 @@ public:
 
     explicit uint256(const std::vector<unsigned char>& vch)
     {
-        if (vch.size() == sizeof(pn))
-            memcpy(pn, &vch[0], sizeof(pn));
-        else
-            *this = 0;
+        if (vch.size() != sizeof(pn))
+            throw uint_error("Converting vector of wrong size to base_uint");
+        memcpy(pn, &vch[0], sizeof(pn));
     }
 };
 
@@ -684,10 +688,9 @@ public:
 
     explicit uint512(const std::vector<unsigned char>& vch)
     {
-        if (vch.size() == sizeof(pn))
-            memcpy(pn, &vch[0], sizeof(pn));
-        else
-            *this = 0;
+        if (vch.size() != sizeof(pn))
+            throw uint_error("Converting vector of wrong size to base_uint");
+        memcpy(pn, &vch[0], sizeof(pn));
     }
 
     uint256 trim256() const
