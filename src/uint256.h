@@ -185,6 +185,58 @@ public:
         return *this;
     }
 
+    base_uint& operator*=(uint32_t b32)
+    {
+        uint64_t carry = 0;
+        for (int i = 0; i < WIDTH; i++)
+        {
+            uint64_t n = carry + (uint64_t)b32 * pn[i];
+            pn[i] = n & 0xffffffff;
+            carry = n >> 32;
+        }
+        return *this;
+    }
+
+    base_uint& operator*=(const base_uint& b)
+    {
+        base_uint a = *this;
+        *this = 0;
+        for (int j = 0; j < WIDTH; j++) {
+            uint64_t carry = 0;
+            for (int i = 0; i + j < WIDTH; i++) {
+                uint64_t n = carry + pn[i + j] + (uint64_t)a.pn[j] * b.pn[i];
+                pn[i + j] = n & 0xffffffff;
+                carry = n >> 32;
+            }
+        }
+        return *this;
+    }
+
+    base_uint& operator/=(const base_uint& b)
+    {
+        base_uint div = b; // make a copy, so we can shift.
+        base_uint num = *this; // make a copy, so we can subtract.
+        *this = 0; // the quotient.
+        int num_bits = num.bits();
+        int div_bits = div.bits();
+        if (div_bits == 0)
+            throw uint_error("Division by zero");
+        if (div_bits > num_bits) // the result is certainly 0.
+            return *this;
+        int shift = num_bits - div_bits;
+        div <<= shift; // shift so that div and nun align.
+        while (shift >= 0) {
+            if (num >= div) {
+                num -= div;
+                pn[shift / 32] |= (1 << (shift & 31)); // set a bit of the result.
+            }
+            div >>= 1; // shift back.
+            shift--;
+        }
+        // num now contains the remainder of the division.
+        return *this;
+    }
+
 
     base_uint& operator++()
     {
@@ -374,6 +426,22 @@ public:
         return sizeof(pn);
     }
 
+    // Returns the position of the highest bit set plus one, or zero if the
+    // value is zero.
+    unsigned int bits() const
+    {
+        for (int pos = WIDTH-1; pos >= 0; pos--) {
+            if (pn[pos]) {
+                for (int bits = 31; bits > 0; bits--) {
+                    if (pn[pos] & 1<<bits)
+                        return 32*pos + bits + 1;
+                }
+                return 32*pos + 1;
+            }
+        }
+        return 0;
+    }
+
     uint64_t GetLow64() const
     {
         assert(WIDTH >= 2);
@@ -482,12 +550,15 @@ inline const uint160 operator<<(const base_uint160& a, unsigned int shift)   { r
 inline const uint160 operator>>(const base_uint160& a, unsigned int shift)   { return uint160(a) >>= shift; }
 inline const uint160 operator<<(const uint160& a, unsigned int shift)        { return uint160(a) <<= shift; }
 inline const uint160 operator>>(const uint160& a, unsigned int shift)        { return uint160(a) >>= shift; }
+inline const uint160 operator*(const base_uint160& a, uint32_t b) { return uint160(a) *= b; }
 
 inline const uint160 operator^(const base_uint160& a, const base_uint160& b) { return uint160(a) ^= b; }
 inline const uint160 operator&(const base_uint160& a, const base_uint160& b) { return uint160(a) &= b; }
 inline const uint160 operator|(const base_uint160& a, const base_uint160& b) { return uint160(a) |= b; }
 inline const uint160 operator+(const base_uint160& a, const base_uint160& b) { return uint160(a) += b; }
 inline const uint160 operator-(const base_uint160& a, const base_uint160& b) { return uint160(a) -= b; }
+inline const uint160 operator*(const base_uint160& a, const base_uint160& b) { return uint160(a) *= b; }
+inline const uint160 operator/(const base_uint160& a, const base_uint160& b) { return uint160(a) /= b; }
 
 inline bool operator<(const base_uint160& a, const uint160& b)          { return (base_uint160)a <  (base_uint160)b; }
 inline bool operator<=(const base_uint160& a, const uint160& b)         { return (base_uint160)a <= (base_uint160)b; }
@@ -500,6 +571,8 @@ inline const uint160 operator&(const base_uint160& a, const uint160& b) { return
 inline const uint160 operator|(const base_uint160& a, const uint160& b) { return (base_uint160)a |  (base_uint160)b; }
 inline const uint160 operator+(const base_uint160& a, const uint160& b) { return (base_uint160)a +  (base_uint160)b; }
 inline const uint160 operator-(const base_uint160& a, const uint160& b) { return (base_uint160)a -  (base_uint160)b; }
+inline const uint160 operator*(const base_uint160& a, const uint160& b) { return (base_uint160)a *  (base_uint160)b; }
+inline const uint160 operator/(const base_uint160& a, const uint160& b) { return (base_uint160)a /  (base_uint160)b; }
 
 inline bool operator<(const uint160& a, const base_uint160& b)          { return (base_uint160)a <  (base_uint160)b; }
 inline bool operator<=(const uint160& a, const base_uint160& b)         { return (base_uint160)a <= (base_uint160)b; }
@@ -512,6 +585,8 @@ inline const uint160 operator&(const uint160& a, const base_uint160& b) { return
 inline const uint160 operator|(const uint160& a, const base_uint160& b) { return (base_uint160)a |  (base_uint160)b; }
 inline const uint160 operator+(const uint160& a, const base_uint160& b) { return (base_uint160)a +  (base_uint160)b; }
 inline const uint160 operator-(const uint160& a, const base_uint160& b) { return (base_uint160)a -  (base_uint160)b; }
+inline const uint160 operator*(const uint160& a, const base_uint160& b) { return (base_uint160)a *  (base_uint160)b; }
+inline const uint160 operator/(const uint160& a, const base_uint160& b) { return (base_uint160)a /  (base_uint160)b; }
 
 inline bool operator<(const uint160& a, const uint160& b)               { return (base_uint160)a <  (base_uint160)b; }
 inline bool operator<=(const uint160& a, const uint160& b)              { return (base_uint160)a <= (base_uint160)b; }
@@ -524,6 +599,8 @@ inline const uint160 operator&(const uint160& a, const uint160& b)      { return
 inline const uint160 operator|(const uint160& a, const uint160& b)      { return (base_uint160)a |  (base_uint160)b; }
 inline const uint160 operator+(const uint160& a, const uint160& b)      { return (base_uint160)a +  (base_uint160)b; }
 inline const uint160 operator-(const uint160& a, const uint160& b)      { return (base_uint160)a -  (base_uint160)b; }
+inline const uint160 operator*(const uint160& a, const uint160& b)      { return (base_uint160)a *  (base_uint160)b; }
+inline const uint160 operator/(const uint160& a, const uint160& b)      { return (base_uint160)a /  (base_uint160)b; }
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -591,12 +668,15 @@ inline const uint256 operator<<(const base_uint256& a, unsigned int shift)   { r
 inline const uint256 operator>>(const base_uint256& a, unsigned int shift)   { return uint256(a) >>= shift; }
 inline const uint256 operator<<(const uint256& a, unsigned int shift)        { return uint256(a) <<= shift; }
 inline const uint256 operator>>(const uint256& a, unsigned int shift)        { return uint256(a) >>= shift; }
+inline const uint256 operator*(const base_uint256& a, uint32_t b) { return uint256(a) *= b; }
 
 inline const uint256 operator^(const base_uint256& a, const base_uint256& b) { return uint256(a) ^= b; }
 inline const uint256 operator&(const base_uint256& a, const base_uint256& b) { return uint256(a) &= b; }
 inline const uint256 operator|(const base_uint256& a, const base_uint256& b) { return uint256(a) |= b; }
 inline const uint256 operator+(const base_uint256& a, const base_uint256& b) { return uint256(a) += b; }
 inline const uint256 operator-(const base_uint256& a, const base_uint256& b) { return uint256(a) -= b; }
+inline const uint256 operator*(const base_uint256& a, const base_uint256& b) { return uint256(a) *= b; }
+inline const uint256 operator/(const base_uint256& a, const base_uint256& b) { return uint256(a) /= b; }
 
 inline bool operator<(const base_uint256& a, const uint256& b)          { return (base_uint256)a <  (base_uint256)b; }
 inline bool operator<=(const base_uint256& a, const uint256& b)         { return (base_uint256)a <= (base_uint256)b; }
@@ -609,6 +689,8 @@ inline const uint256 operator&(const base_uint256& a, const uint256& b) { return
 inline const uint256 operator|(const base_uint256& a, const uint256& b) { return (base_uint256)a |  (base_uint256)b; }
 inline const uint256 operator+(const base_uint256& a, const uint256& b) { return (base_uint256)a +  (base_uint256)b; }
 inline const uint256 operator-(const base_uint256& a, const uint256& b) { return (base_uint256)a -  (base_uint256)b; }
+inline const uint256 operator*(const base_uint256& a, const uint256& b) { return (base_uint256)a *  (base_uint256)b; }
+inline const uint256 operator/(const base_uint256& a, const uint256& b) { return (base_uint256)a /  (base_uint256)b; }
 
 inline bool operator<(const uint256& a, const base_uint256& b)          { return (base_uint256)a <  (base_uint256)b; }
 inline bool operator<=(const uint256& a, const base_uint256& b)         { return (base_uint256)a <= (base_uint256)b; }
@@ -621,6 +703,8 @@ inline const uint256 operator&(const uint256& a, const base_uint256& b) { return
 inline const uint256 operator|(const uint256& a, const base_uint256& b) { return (base_uint256)a |  (base_uint256)b; }
 inline const uint256 operator+(const uint256& a, const base_uint256& b) { return (base_uint256)a +  (base_uint256)b; }
 inline const uint256 operator-(const uint256& a, const base_uint256& b) { return (base_uint256)a -  (base_uint256)b; }
+inline const uint256 operator*(const uint256& a, const base_uint256& b) { return (base_uint256)a *  (base_uint256)b; }
+inline const uint256 operator/(const uint256& a, const base_uint256& b) { return (base_uint256)a /  (base_uint256)b; }
 
 inline bool operator<(const uint256& a, const uint256& b)               { return (base_uint256)a <  (base_uint256)b; }
 inline bool operator<=(const uint256& a, const uint256& b)              { return (base_uint256)a <= (base_uint256)b; }
@@ -633,6 +717,8 @@ inline const uint256 operator&(const uint256& a, const uint256& b)      { return
 inline const uint256 operator|(const uint256& a, const uint256& b)      { return (base_uint256)a |  (base_uint256)b; }
 inline const uint256 operator+(const uint256& a, const uint256& b)      { return (base_uint256)a +  (base_uint256)b; }
 inline const uint256 operator-(const uint256& a, const uint256& b)      { return (base_uint256)a -  (base_uint256)b; }
+inline const uint256 operator*(const uint256& a, const uint256& b)      { return (base_uint256)a *  (base_uint256)b; }
+inline const uint256 operator/(const uint256& a, const uint256& b)      { return (base_uint256)a /  (base_uint256)b; }
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -709,12 +795,15 @@ inline const uint512 operator<<(const base_uint512& a, unsigned int shift)   { r
 inline const uint512 operator>>(const base_uint512& a, unsigned int shift)   { return uint512(a) >>= shift; }
 inline const uint512 operator<<(const uint512& a, unsigned int shift)        { return uint512(a) <<= shift; }
 inline const uint512 operator>>(const uint512& a, unsigned int shift)        { return uint512(a) >>= shift; }
+inline const uint512 operator*(const base_uint512& a, uint32_t b) { return uint512(a) *= b; }
 
 inline const uint512 operator^(const base_uint512& a, const base_uint512& b) { return uint512(a) ^= b; }
 inline const uint512 operator&(const base_uint512& a, const base_uint512& b) { return uint512(a) &= b; }
 inline const uint512 operator|(const base_uint512& a, const base_uint512& b) { return uint512(a) |= b; }
 inline const uint512 operator+(const base_uint512& a, const base_uint512& b) { return uint512(a) += b; }
 inline const uint512 operator-(const base_uint512& a, const base_uint512& b) { return uint512(a) -= b; }
+inline const uint512 operator*(const base_uint512& a, const base_uint512& b) { return uint512(a) *= b; }
+inline const uint512 operator/(const base_uint512& a, const base_uint512& b) { return uint512(a) /= b; }
 
 inline bool operator<(const base_uint512& a, const uint512& b)          { return (base_uint512)a <  (base_uint512)b; }
 inline bool operator<=(const base_uint512& a, const uint512& b)         { return (base_uint512)a <= (base_uint512)b; }
@@ -727,6 +816,8 @@ inline const uint512 operator&(const base_uint512& a, const uint512& b) { return
 inline const uint512 operator|(const base_uint512& a, const uint512& b) { return (base_uint512)a |  (base_uint512)b; }
 inline const uint512 operator+(const base_uint512& a, const uint512& b) { return (base_uint512)a +  (base_uint512)b; }
 inline const uint512 operator-(const base_uint512& a, const uint512& b) { return (base_uint512)a -  (base_uint512)b; }
+inline const uint512 operator*(const base_uint512& a, const uint512& b) { return (base_uint512)a *  (base_uint512)b; }
+inline const uint512 operator/(const base_uint512& a, const uint512& b) { return (base_uint512)a /  (base_uint512)b; }
 
 inline bool operator<(const uint512& a, const base_uint512& b)          { return (base_uint512)a <  (base_uint512)b; }
 inline bool operator<=(const uint512& a, const base_uint512& b)         { return (base_uint512)a <= (base_uint512)b; }
@@ -739,6 +830,8 @@ inline const uint512 operator&(const uint512& a, const base_uint512& b) { return
 inline const uint512 operator|(const uint512& a, const base_uint512& b) { return (base_uint512)a |  (base_uint512)b; }
 inline const uint512 operator+(const uint512& a, const base_uint512& b) { return (base_uint512)a +  (base_uint512)b; }
 inline const uint512 operator-(const uint512& a, const base_uint512& b) { return (base_uint512)a -  (base_uint512)b; }
+inline const uint512 operator*(const uint512& a, const base_uint512& b) { return (base_uint512)a *  (base_uint512)b; }
+inline const uint512 operator/(const uint512& a, const base_uint512& b) { return (base_uint512)a /  (base_uint512)b; }
 
 inline bool operator<(const uint512& a, const uint512& b)               { return (base_uint512)a <  (base_uint512)b; }
 inline bool operator<=(const uint512& a, const uint512& b)              { return (base_uint512)a <= (base_uint512)b; }
@@ -751,5 +844,7 @@ inline const uint512 operator&(const uint512& a, const uint512& b)      { return
 inline const uint512 operator|(const uint512& a, const uint512& b)      { return (base_uint512)a |  (base_uint512)b; }
 inline const uint512 operator+(const uint512& a, const uint512& b)      { return (base_uint512)a +  (base_uint512)b; }
 inline const uint512 operator-(const uint512& a, const uint512& b)      { return (base_uint512)a -  (base_uint512)b; }
+inline const uint512 operator*(const uint512& a, const uint512& b)      { return (base_uint512)a *  (base_uint512)b; }
+inline const uint512 operator/(const uint512& a, const uint512& b)      { return (base_uint512)a /  (base_uint512)b; }
 
 #endif
